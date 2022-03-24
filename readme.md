@@ -15,3 +15,8 @@ Step V: Render and Commit Phases
 Step VI: Reconciliation
 Step VII: Function Components
 Step VIII: Hooks
+
+
+
+createElement: vdom
+render: vdom to dom

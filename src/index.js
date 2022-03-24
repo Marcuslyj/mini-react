@@ -25,8 +25,28 @@ function createElement(type, props, ...children) {
     }
 }
 
+function render(element, container) {
+    const dom =
+        element.type == "TEXT_ELEMENT"
+            ? document.createTextNode("")
+            : document.createElement(element.type)
+
+    const isProperty = key => key !== "children"
+    Object.keys(element.props)
+        .filter(isProperty)
+        .forEach(name => {
+            dom[name] = element.props[name]
+        })
+
+    element.props.children.forEach(child =>
+        render(child, dom)
+    )
+    container.appendChild(dom)
+}
+
 const Didact = {
-    createElement
+    createElement,
+    render
 }
 
 // const element = Didact.createElement(
@@ -41,8 +61,12 @@ const element = (
     <div id="foo">
         <a>bar</a>
         <b />
+        <div>uu</div>
     </div>
 )
 
 
 console.log(element);
+
+const container = document.getElementById("root")
+Didact.render(element, container)
