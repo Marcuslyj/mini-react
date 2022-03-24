@@ -19,4 +19,13 @@ Step VIII: Hooks
 
 
 createElement: vdom
+
 render: vdom to dom
+
+Concurrent Mode:
+break the work into small units so that you can stop and continue.
+use requestIdleCallback to keep looping.
+To start using the loop we’ll need to set the first unit of work, and then write a performUnitOfWork function that not only performs the work but also returns the next unit of work.
+
+
+

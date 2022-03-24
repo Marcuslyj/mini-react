@@ -44,6 +44,30 @@ function render(element, container) {
     container.appendChild(dom)
 }
 
+// break the work into small units
+
+// To start using the loop we’ll need to set the first unit of work,
+// and then write a performUnitOfWork function that not only performs the work but also returns the next unit of work.
+let nextUnitOfWork = null
+
+function workLoop(deadline) {
+    let shouldYield = false
+    while (nextUnitOfWork && !shouldYield) {
+        nextUnitOfWork = performUnitOfWork(
+            nextUnitOfWork
+        )
+        shouldYield = deadline.timeRemaining() < 1
+    }
+    requestIdleCallback(workLoop)
+}
+
+// workloop一直保持运行
+requestIdleCallback(workLoop)
+
+function performUnitOfWork(nextUnitOfWork) {
+    // TODO
+}
+
 const Didact = {
     createElement,
     render
@@ -60,7 +84,7 @@ const Didact = {
 const element = (
     <div id="foo">
         <a>bar</a>
-        <b />
+        <br />
         <div>uu</div>
     </div>
 )
