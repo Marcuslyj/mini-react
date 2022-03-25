@@ -35,3 +35,8 @@ We’ll have one fiber for each element and each fiber will be a unit of work.
 One of the goals of this data structure is to make it easy to find the next unit of work. That’s why each fiber has a link to its first child, its next sibling and its parent.
 
 
+Render and Commit Phases:
+We have another problem here.
+We are adding a new node to the DOM each time we work on an element. And, remember, the browser could interrupt our work before we finish rendering the whole tree. In that case, the user will see an incomplete UI. And we don’t want that.
+
+

@@ -1,8 +1,8 @@
-import React from 'react';
 
 // To start using the loop we’ll need to set the first unit of work,
 // and then write a performUnitOfWork function that not only performs the work but also returns the next unit of work.
 let nextUnitOfWork = null
+let wipRoot = null
 
 // 处理基础数据类型
 function createTextElement(text) {
@@ -32,10 +32,9 @@ function createElement(type, props, ...children) {
 // fiber就类似一个vnode
 function createDom(fiber) {
     const dom =
-        element.type == "TEXT_ELEMENT"
+    fiber.type == "TEXT_ELEMENT"
             ? document.createTextNode("")
             : document.createElement(fiber.type)
-
     const isProperty = key => key !== "children"
     Object.keys(fiber.props)
         .filter(isProperty)
@@ -46,15 +45,38 @@ function createDom(fiber) {
     return dom
 }
 
+function commitWork(fiber) {
+    if (!fiber) {
+        return
+    }
+    const domParent = fiber.parent.dom
+    domParent.appendChild(fiber.dom)
+    commitWork(fiber.child)
+    commitWork(fiber.sibling)
+}
+
+// And once we finish all the work (we know it because there isn’t a next unit of work)
+// we commit the whole fiber tree to the DOM.
+function commitRoot() {
+    // TODO add nodes to dom
+    commitWork(wipRoot.child)
+    console.log(wipRoot)
+    document.querySelector('body').appendChild(wipRoot.dom)
+    wipRoot = null
+}
+
+
+
 // In the render function we set nextUnitOfWork to the root of the fiber tree.
 // 起点吧，这样requestIdleCallback(workLoop)就开始工作了
 function render(element, container) {
-    nextUnitOfWork = {
+    wipRoot = {
         dom: container,
         props: {
             children: [element],
         },
     }
+    nextUnitOfWork = wipRoot
 }
 
 // break the work into small units
@@ -66,6 +88,11 @@ function workLoop(deadline) {
         )
         shouldYield = deadline.timeRemaining() < 1
     }
+
+    if (!nextUnitOfWork && wipRoot) {
+        commitRoot()
+    }
+
     requestIdleCallback(workLoop)
 }
 
@@ -79,10 +106,10 @@ function performUnitOfWork(fiber) {
         fiber.dom = createDom(fiber)
     }
 
-    if (fiber.parent) {
-        // append to parent
-        fiber.parent.dom.appendChild(fiber.dom)
-    }
+    // if (fiber.parent) {
+    //     // append to parent
+    //     fiber.parent.dom.appendChild(fiber.dom)
+    // }
 
     // TODO create new fibers
     const elements = fiber.props.children
