@@ -40,3 +40,7 @@ We have another problem here.
 We are adding a new node to the DOM each time we work on an element. And, remember, the browser could interrupt our work before we finish rendering the whole tree. In that case, the user will see an incomplete UI. And we don’t want that.
 
 
+Reconciliation:
+So far we only added stuff to the DOM, but what about updating or deleting nodes?
+
+That’s what we are going to do now, we need to compare the elements we receive on the render function to the last fiber tree we committed to the DOM.
