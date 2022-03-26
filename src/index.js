@@ -336,19 +336,6 @@ const Didact = {
 // )
 
 /** @jsx Didact.createElement */
-const element = (
-    <div id="foo">
-        <a>bar</a>
-        <br />
-        <div>uu</div>
-    </div>
-)
-
-
-
-
-const container = document.getElementById("root")
-
 function App(props) {
     return <h1>Hi {props.name}</h1>
 }
@@ -361,20 +348,6 @@ function Counter() {
     )
 }
 
-const updateValue = e => {
-    rerender(e.target.value)
-}
-const rerender = value => {
-    /** @jsx Didact.createElement */
-    const element = (
-        <div>
-            <input onInput={updateValue} value={value} />
-            <h2>Hello {value}</h2>
-            <App name="foo" />
-            <Counter />
-        </div>
-    )
-    console.log(element)
-    Didact.render(element, container)
-}
-rerender("World")
+const element = <Counter />;
+const container = document.getElementById("root");
+Didact.render(element, container);
