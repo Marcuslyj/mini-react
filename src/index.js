@@ -5,6 +5,8 @@ let nextUnitOfWork = null
 let wipRoot = null
 let currentRoot = null
 let deletions = null
+let hookIndex = null
+let wipFiber = null;
 
 // 处理基础数据类型
 function createTextElement(text) {
@@ -253,8 +255,42 @@ function reconcileChildren(wipFiber, elements) {
 }
 
 function updateFunctionComponent(fiber) {
+    wipFiber = fiber
+    hookIndex = 0
+    wipFiber.hooks = []
     const children = [fiber.type(fiber.props)]
     reconcileChildren(fiber, children)
+}
+
+function useState(initial) {
+    const oldHook =
+        wipFiber.alternate &&
+        wipFiber.alternate.hooks &&
+        wipFiber.alternate.hooks[hookIndex]
+    const hook = {
+        state: oldHook ? oldHook.state : initial,
+        queue: [],
+    }
+
+    const actions = oldHook ? oldHook.queue : []
+    actions.forEach(action => {
+        hook.state = action(hook.state)
+    })
+
+    const setState = action => {
+        hook.queue.push(action)
+        wipRoot = {
+            dom: currentRoot.dom,
+            props: currentRoot.props,
+            alternate: currentRoot,
+        }
+        nextUnitOfWork = wipRoot
+        deletions = []
+    }
+
+    wipFiber.hooks.push(hook)
+    hookIndex++
+    return [hook.state, setState]
 }
 
 function updateHostComponent(fiber) {
@@ -288,7 +324,8 @@ function performUnitOfWork(fiber) {
 
 const Didact = {
     createElement,
-    render
+    render,
+    useState
 }
 
 // const element = Didact.createElement(
@@ -315,6 +352,14 @@ const container = document.getElementById("root")
 function App(props) {
     return <h1>Hi {props.name}</h1>
 }
+function Counter() {
+    const [state, setState] = Didact.useState(1)
+    return (
+        <h1 onClick={() => setState(c => c + 1)}>
+            Count: {state}
+        </h1>
+    )
+}
 
 const updateValue = e => {
     rerender(e.target.value)
@@ -326,6 +371,7 @@ const rerender = value => {
             <input onInput={updateValue} value={value} />
             <h2>Hello {value}</h2>
             <App name="foo" />
+            <Counter />
         </div>
     )
     console.log(element)
