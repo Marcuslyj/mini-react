@@ -100,18 +100,31 @@ function updateDom(dom, prevProps, nextProps) {
         })
 }
 
+function commitDeletion(fiber, domParent) {
+    if (fiber.dom) {
+        domParent.removeChild(fiber.dom)
+    } else {
+        commitDeletion(fiber.child, domParent)
+    }
+}
+
 function commitWork(fiber) {
     if (!fiber) {
         return
     }
-    const domParent = fiber.parent.dom
+    let domParentFiber = fiber.parent
+    while (!domParentFiber.dom) {
+        domParentFiber = domParentFiber.parent
+    }
+    const domParent = domParentFiber.dom
+
     if (
         fiber.effectTag === "PLACEMENT" &&
         fiber.dom != null
     ) {
         domParent.appendChild(fiber.dom)
     } else if (fiber.effectTag === "DELETION") {
-        domParent.removeChild(fiber.dom)
+        commitDeletion(fiber, domParent)
     } else if (
         fiber.effectTag === "UPDATE" &&
         fiber.dom != null
@@ -239,16 +252,27 @@ function reconcileChildren(wipFiber, elements) {
     }
 }
 
-function performUnitOfWork(fiber) {
-    // TODO add dom node
+function updateFunctionComponent(fiber) {
+    const children = [fiber.type(fiber.props)]
+    reconcileChildren(fiber, children)
+}
+
+function updateHostComponent(fiber) {
     if (!fiber.dom) {
-        // 创建dom
         fiber.dom = createDom(fiber)
     }
+    reconcileChildren(fiber, fiber.props.children)
+}
 
-    // TODO create new fibers
-    const elements = fiber.props.children
-    reconcileChildren(fiber, elements)
+
+function performUnitOfWork(fiber) {
+    const isFunctionComponent =
+        fiber.type instanceof Function
+    if (isFunctionComponent) {
+        updateFunctionComponent(fiber)
+    } else {
+        updateHostComponent(fiber)
+    }
 
     if (fiber.child) {
         return fiber.child
@@ -288,6 +312,10 @@ const element = (
 
 const container = document.getElementById("root")
 
+function App(props) {
+    return <h1>Hi {props.name}</h1>
+}
+
 const updateValue = e => {
     rerender(e.target.value)
 }
@@ -297,6 +325,7 @@ const rerender = value => {
         <div>
             <input onInput={updateValue} value={value} />
             <h2>Hello {value}</h2>
+            <App name="foo" />
         </div>
     )
     console.log(element)
